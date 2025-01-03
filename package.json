@@ -10,6 +10,6 @@
         "url": "git+https://github.com/ajones/MMM-PurpleAir.git"
     },
     "dependencies": {
-        "request": "^2.88.2"
+         "axios": "^1.0.0"
     }
 }
