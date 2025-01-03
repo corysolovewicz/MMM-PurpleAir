@@ -20,7 +20,8 @@ Module.register("MMM-PurpleAir", {
 		debug: false,
     apiKey: "",
     sensorIndex:"",
-    updateIntervalSec: 30,
+    sensorName: "Air Quality", 
+    updateIntervalSec: 600, // default is 10 minutes to reduce api calls
     initialLoadDelaySec: 3, 
 	},
 
@@ -208,7 +209,7 @@ Module.register("MMM-PurpleAir", {
 
 		var sensorName = document.createElement("h3");
 		sensorName.className = "sensor-name"
-		sensorName.innerHTML = `${sensor.name}`;
+		sensorName.innerHTML = `${this.config.sensorName}`;
 		
 		var sensorValue = document.createElement("div");
 		sensorValue.className = "sensor-value"
@@ -228,25 +229,22 @@ Module.register("MMM-PurpleAir", {
 	},
 
 
-  /**
-   * Sends a message out to the node_helper that will call for updated sensor data
-   */
 	getData: function() {
-    Log.info('MMM-PurpleAir: refreshing sensor data...');
-    this.sendSocketNotification(
-			//'MMM-PurpleAir.Request',
-      this.notificationName(NotificationType.Request),
-			{
-				responseKey: this.notificationName(NotificationType.Response),
-				req: {
-					url: `https://api.purpleair.com/v1/sensors/${this.config.sensorIndex}`,
-					headers: {
-						"X-API-Key": this.config.apiKey,
-					}
-				}
-			}
-		);
-	},
+  Log.info('MMM-PurpleAir: refreshing sensor data...');
+  this.sendSocketNotification(
+    this.notificationName(NotificationType.Request),
+    {
+      responseKey: this.notificationName(NotificationType.Response),
+      req: {
+        url: `https://api.purpleair.com/v1/sensors/${this.config.sensorIndex}?fields=pm2.5_10minute`,
+        headers: {
+          "X-API-Key": this.config.apiKey,
+        }
+      }
+    }
+  );
+},
+
 
   /**
    * Schedules a getData call after delaySec
