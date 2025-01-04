@@ -60,17 +60,20 @@ Module.register("MMM-PurpleAir", {
     return `${this.name}.${notifType}.${this.config.sensorIndex}`
   },
 
-	// messages received from from your node helper (NOT other modules or the system)
-	// payload is a notification dependent data structure, up to you to design between module and node_helper
 	socketNotificationReceived: function(notification, payload) {
-		Log.info(`${this.name} received a socket notification: ${notification} - Payload: ${payload}`);
-    if(notification === this.notificationName(NotificationType.Response)){
-			this.currentData = JSON.parse(payload.response.body)
-			// tell mirror runtime that our data has changed,
-			// we will be called back at GetDom() to provide the updated content
-			this.updateDom(1000)
-		}
-	},
+  Log.info(`${this.name} received a socket notification: ${notification} - Payload: ${JSON.stringify(payload)}`);
+  
+  if (notification === this.notificationName(NotificationType.Response)) {
+    if (payload.error) {
+      Log.error(`MMM-PurpleAir: Error from helper - ${payload.error}`);
+      return;
+    }
+    
+    // Update the current data and refresh the DOM
+    this.currentData = payload.response.body; // Axios already parses JSON, no need for `JSON.parse`
+    this.updateDom(1000);
+  }
+},
 
   
   /**
@@ -228,7 +231,6 @@ Module.register("MMM-PurpleAir", {
 		return wrapper;
 	},
 
-
 	getData: function() {
   Log.info('MMM-PurpleAir: refreshing sensor data...');
   this.sendSocketNotification(
@@ -244,7 +246,6 @@ Module.register("MMM-PurpleAir", {
     }
   );
 },
-
 
   /**
    * Schedules a getData call after delaySec
