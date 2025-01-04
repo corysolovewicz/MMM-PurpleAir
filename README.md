@@ -59,12 +59,13 @@ The additional defaults listed below can be overridden by placing new values in 
 
 **debug** Defaults to `false`. Will produce more logs during during its operation. Useful if you are experiencing issues displaying the sensor data.
 
-**updateIntervalSec** Defaults to `30`. The number of seconds between calls to Purple Air's API for new data. Caution, you should only adjust this value to a lower number if the rate limits on your API key can support it. 
+**updateIntervalSec** Defaults to `600`. The number of seconds between calls to Purple Air's API for new data. Caution, you should only adjust this value to a lower number if the rate limits on your API key can support it. 
 
 **initialLoadDelaySec** Defaults to `3`. The number of seconds after the module starts until the first call to Purple Air for sensor data. The word `loading...` will be displayed until this first call completes. This delay can be useful to allow other modules to initialize before displaying data.
+
+**sensorName** Defaults to `"Air Quality"`.  If including more than one sensor display this is helpful to define to be more descriptive. 
 
 ## Troubleshooting
 If you're having issues with the air quality icons (ie. 🟩 🟨 🟧 🟥 🟪 💀) displaying when running MagicMirror in the electron app, make sure you have an emoji supported font installed. 
 If you're running on linux:
 `sudo apt install fonts-noto-color-emoji`
-

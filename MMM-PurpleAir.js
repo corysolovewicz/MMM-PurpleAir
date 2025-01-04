@@ -20,7 +20,8 @@ Module.register("MMM-PurpleAir", {
 		debug: false,
     apiKey: "",
     sensorIndex:"",
-    updateIntervalSec: 30,
+    sensorName: "Air Quality", 
+    updateIntervalSec: 600, // default is 10 minutes to reduce api calls
     initialLoadDelaySec: 3, 
 	},
 
@@ -59,17 +60,20 @@ Module.register("MMM-PurpleAir", {
     return `${this.name}.${notifType}.${this.config.sensorIndex}`
   },
 
-	// messages received from from your node helper (NOT other modules or the system)
-	// payload is a notification dependent data structure, up to you to design between module and node_helper
 	socketNotificationReceived: function(notification, payload) {
-		Log.info(`${this.name} received a socket notification: ${notification} - Payload: ${payload}`);
-    if(notification === this.notificationName(NotificationType.Response)){
-			this.currentData = JSON.parse(payload.response.body)
-			// tell mirror runtime that our data has changed,
-			// we will be called back at GetDom() to provide the updated content
-			this.updateDom(1000)
-		}
-	},
+  Log.info(`${this.name} received a socket notification: ${notification} - Payload: ${JSON.stringify(payload)}`);
+  
+  if (notification === this.notificationName(NotificationType.Response)) {
+    if (payload.error) {
+      Log.error(`MMM-PurpleAir: Error from helper - ${payload.error}`);
+      return;
+    }
+    
+    // Update the current data and refresh the DOM
+    this.currentData = payload.response.body; // Axios already parses JSON, no need for `JSON.parse`
+    this.updateDom(1000);
+  }
+},
 
   
   /**
@@ -208,7 +212,7 @@ Module.register("MMM-PurpleAir", {
 
 		var sensorName = document.createElement("h3");
 		sensorName.className = "sensor-name"
-		sensorName.innerHTML = `${sensor.name}`;
+		sensorName.innerHTML = `${this.config.sensorName}`;
 		
 		var sensorValue = document.createElement("div");
 		sensorValue.className = "sensor-value"
@@ -227,26 +231,21 @@ Module.register("MMM-PurpleAir", {
 		return wrapper;
 	},
 
-
-  /**
-   * Sends a message out to the node_helper that will call for updated sensor data
-   */
 	getData: function() {
-    Log.info('MMM-PurpleAir: refreshing sensor data...');
-    this.sendSocketNotification(
-			//'MMM-PurpleAir.Request',
-      this.notificationName(NotificationType.Request),
-			{
-				responseKey: this.notificationName(NotificationType.Response),
-				req: {
-					url: `https://api.purpleair.com/v1/sensors/${this.config.sensorIndex}`,
-					headers: {
-						"X-API-Key": this.config.apiKey,
-					}
-				}
-			}
-		);
-	},
+  Log.info('MMM-PurpleAir: refreshing sensor data...');
+  this.sendSocketNotification(
+    this.notificationName(NotificationType.Request),
+    {
+      responseKey: this.notificationName(NotificationType.Response),
+      req: {
+        url: `https://api.purpleair.com/v1/sensors/${this.config.sensorIndex}?fields=pm2.5_10minute`,
+        headers: {
+          "X-API-Key": this.config.apiKey,
+        }
+      }
+    }
+  );
+},
 
   /**
    * Schedules a getData call after delaySec
